@@ -6,6 +6,7 @@ import "react-quill/dist/quill.snow.css";
 
 const App = () => {
   const [content, setContent] = useState("");
+  const [editorKey, setEditorKey] = useState(Date.now()); // Use a key to force re-render if needed
 
   const docRef = doc(db, "documents", "shared-doc"); // Reference to the document in Firestore
 
@@ -55,9 +56,23 @@ const App = () => {
       <button onClick={handleClearText} style={{ marginBottom: "10px" }}>Clear Text</button>
       {/* Text Editor */}
       <ReactQuill 
+        key={editorKey} // Use a unique key to force re-render if needed
         value={content} 
         onChange={handleChange} 
         placeholder="Start typing..." 
+        formats={[
+          'header', 'bold', 'italic', 'underline', 'strike', 'blockquote',
+          'list', 'bullet', 'link', 'image'
+        ]}
+        modules={{
+          toolbar: [
+            [{ 'header': [1, 2, false] }],
+            ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['link', 'image'],
+            ['clean']
+          ]
+        }}
       />
     </div>
   );
