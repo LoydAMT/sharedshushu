@@ -4,6 +4,11 @@ import { db } from "./firebaseConfig"; // Import Firestore instance
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore"; 
 import "react-quill/dist/quill.snow.css";
 
+// Characters to use for replacement
+const SPACE_CHAR = "ؚ";
+const LINE_BREAK_CHAR = "⧫";
+const CURSOR_CHAR = "⨯"; // Placeholder for cursor position
+
 const App = () => {
   const [content, setContent] = useState("");
   const [editorKey, setEditorKey] = useState(Date.now()); // Use a key to force re-render if needed
@@ -13,9 +18,19 @@ const App = () => {
   useEffect(() => {
     // Fetch the initial content
     const fetchData = async () => {
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setContent(docSnap.data().content);
+      try {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          let fetchedContent = docSnap.data().content || '';
+          fetchedContent = fetchedContent.replace(new RegExp(LINE_BREAK_CHAR, 'g'), '\n')
+                                        .replace(new RegExp(SPACE_CHAR, 'g'), ' ')
+                                        .replace(new RegExp(CURSOR_CHAR, 'g'), ''); // Remove cursor placeholder
+          setContent(fetchedContent);
+        } else {
+          console.log("No such document!");
+        }
+      } catch (error) {
+        console.error("Error fetching data: ", error.message);
       }
     };
 
@@ -24,7 +39,13 @@ const App = () => {
     // Real-time listener
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
-        setContent(docSnap.data().content);
+        let updatedContent = docSnap.data().content || '';
+        updatedContent = updatedContent.replace(new RegExp(LINE_BREAK_CHAR, 'g'), '\n')
+                                      .replace(new RegExp(SPACE_CHAR, 'g'), ' ')
+                                      .replace(new RegExp(CURSOR_CHAR, 'g'), ''); // Remove cursor placeholder
+        setContent(updatedContent);
+      } else {
+        console.log("No such document!");
       }
     });
 
@@ -32,11 +53,14 @@ const App = () => {
   }, []);
 
   const handleChange = async (value) => {
+    let updatedContent = value.replace(/ /g, SPACE_CHAR)
+                              .replace(/\n/g, LINE_BREAK_CHAR)
+                              .replace(/⨯/g, CURSOR_CHAR); // Replace cursor placeholder
     setContent(value);
     try {
-      await setDoc(docRef, { content: value }, { merge: true }); // Save the content to Firestore
+      await setDoc(docRef, { content: updatedContent }, { merge: true });
     } catch (error) {
-      console.error("Error updating content: ", error);
+      console.error("Error updating content: ", error.message);
     }
   };
 
@@ -45,7 +69,7 @@ const App = () => {
     try {
       await setDoc(docRef, { content: "" }, { merge: true }); // Save the empty content to Firestore
     } catch (error) {
-      console.error("Error clearing content: ", error);
+      console.error("Error clearing content: ", error.message);
     }
   };
 
@@ -79,7 +103,6 @@ const App = () => {
 };
 
 export default App;
-
 
 
 
