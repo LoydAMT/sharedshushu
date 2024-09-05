@@ -4,50 +4,51 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const app = express();
-const port = 5000;
-
-// Middleware
-app.use(cors());
 app.use(bodyParser.json());
+app.use(cors());
 
-// MongoDB connection
-mongoose.connect('mongodb://localhost:27017/sharedocs', { useNewUrlParser: true, useUnifiedTopology: true })
+const PORT = 5000;
+
+// Replace with your MongoDB connection string
+const mongoURI = 'mongodb://localhost:27017/sharedocs';
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Schema and Model
 const documentSchema = new mongoose.Schema({
   content: String
 });
-
 const Document = mongoose.model('Document', documentSchema);
 
-// Routes
 app.get('/document', async (req, res) => {
   try {
-    const doc = await Document.findOne();
-    res.json(doc);
+    const document = await Document.findOne();
+    if (document) {
+      res.json(document);
+    } else {
+      res.status(404).send('Document not found');
+    }
   } catch (err) {
-    res.status(500).send(err);
+    res.status(500).send('Server error');
   }
 });
 
 app.post('/document', async (req, res) => {
   try {
     const { content } = req.body;
-    let doc = await Document.findOne();
-    if (doc) {
-      doc.content = content;
+    let document = await Document.findOne();
+    if (document) {
+      document.content = content;
     } else {
-      doc = new Document({ content });
+      document = new Document({ content });
     }
-    await doc.save();
-    res.json(doc);
+    await document.save();
+    res.status(200).send('Document saved');
   } catch (err) {
-    res.status(500).send(err);
+    res.status(500).send('Server error');
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
