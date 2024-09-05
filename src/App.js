@@ -32,12 +32,20 @@ const App = () => {
 
   const handleChange = async (value) => {
     setContent(value);
-    await setDoc(docRef, { content: value }); // Save the content to Firestore
+    try {
+      await setDoc(docRef, { content: value }, { merge: true }); // Save the content to Firestore
+    } catch (error) {
+      console.error("Error updating content: ", error);
+    }
   };
 
   const handleClearText = async () => {
-    setContent(""); // Clear the editor content
-    await setDoc(docRef, { content: "" }); // Save the empty content to Firestore
+    setContent(""); // Clear the editor content locally first
+    try {
+      await setDoc(docRef, { content: "" }, { merge: true }); // Save the empty content to Firestore
+    } catch (error) {
+      console.error("Error clearing content: ", error);
+    }
   };
 
   return (
@@ -46,7 +54,11 @@ const App = () => {
       {/* Clear Text Button on Top */}
       <button onClick={handleClearText} style={{ marginBottom: "10px" }}>Clear Text</button>
       {/* Text Editor */}
-      <ReactQuill value={content} onChange={handleChange} />
+      <ReactQuill 
+        value={content} 
+        onChange={handleChange} 
+        placeholder="Start typing..." 
+      />
     </div>
   );
 };
