@@ -1,25 +1,46 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import ReactQuill from "react-quill";
+import { db } from "./firebaseConfig"; // Import Firestore instance
+import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore"; 
+import "react-quill/dist/quill.snow.css";
 
-function App() {
+const App = () => {
+  const [content, setContent] = useState("");
+
+  const docRef = doc(db, "documents", "shared-doc"); // Reference to the document in Firestore
+
+  useEffect(() => {
+    // Fetch the initial content
+    const fetchData = async () => {
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setContent(docSnap.data().content);
+      }
+    };
+
+    fetchData();
+
+    // Real-time listener
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setContent(docSnap.data().content);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleChange = async (value) => {
+    setContent(value);
+    await setDoc(docRef, { content: value }); // Save the content to Firestore
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Shared Document</h1>
+      <ReactQuill value={content} onChange={handleChange} />
     </div>
   );
-}
+};
 
 export default App;
