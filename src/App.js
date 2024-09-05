@@ -3,6 +3,7 @@ import ReactQuill from "react-quill";
 import { db } from "./firebaseConfig"; // Import Firestore instance
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore"; 
 import "react-quill/dist/quill.snow.css";
+import "./App.css"; // Import custom CSS
 
 const App = () => {
   const [content, setContent] = useState("");
@@ -60,10 +61,6 @@ const App = () => {
         value={content} 
         onChange={handleChange} 
         placeholder="Start typing..." 
-        formats={[
-          'header', 'bold', 'italic', 'underline', 'strike', 'blockquote',
-          'list', 'bullet', 'link', 'image'
-        ]}
         modules={{
           toolbar: [
             [{ 'header': [1, 2, false] }],
