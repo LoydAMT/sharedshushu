@@ -35,9 +35,17 @@ const App = () => {
     await setDoc(docRef, { content: value }); // Save the content to Firestore
   };
 
+  const handleClearText = async () => {
+    setContent(""); // Clear the editor content
+    await setDoc(docRef, { content: "" }); // Save the empty content to Firestore
+  };
+
   return (
     <div>
       <h1>Shared Document</h1>
+      {/* Clear Text Button on Top */}
+      <button onClick={handleClearText} style={{ marginBottom: "10px" }}>Clear Text</button>
+      {/* Text Editor */}
       <ReactQuill value={content} onChange={handleChange} />
     </div>
   );
